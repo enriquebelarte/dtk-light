@@ -1,0 +1,65 @@
+apiVersion: project.openshift.io/v1
+kind: Project
+metadata:
+  annotations:
+    openshift.io/description: ""
+    openshift.io/display-name: ""
+  labels:
+    kubernetes.io/metadata.name: DRIVER_NAME
+  name: DRIVER_NAME
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  labels:
+    app: DRIVER_NAME-driver-container
+  name: DRIVER_NAME-driver-container
+  namespace: DRIVER_NAME
+spec: {}
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  labels:
+    app: DRIVER_NAME-driver-build
+  name: DRIVER_NAME-driver-build
+  namespace: DRIVER_NAME
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/worker: ""
+  runPolicy: "Serial"
+  triggers:
+    - type: "ConfigChange"
+    - type: "ImageChange"
+  source:
+    dockerfile: |
+      FROM DRIVER_TOOLKIT_IMAGE
+      WORKDIR /build/
+
+      RUN yum -y install git make sudo gcc \
+      && yum clean all \
+      && rm -rf /var/cache/dnf
+
+      # Expecting kmod software version as an input to the build
+      ARG KMODVER
+
+      # Grab the software from upstream
+      #RUN git clone https://github.com/enriquebelarte/simple-kmod.git 
+      RUN git clone DRIVER_SOURCE_REPO
+      WORKDIR DRIVER_NAME
+
+      # Prep and build the module
+      RUN make buildprep KVER=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core) KMODVER=${KMODVER} \
+      && make all       KVER=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core) KMODVER=${KMODVER} \
+      && make install   KVER=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core) KMODVER=${KMODVER}
+
+      RUN echo "DRIVER_NAME" > /etc/modules-load.d/DRIVER_NAME.conf
+  strategy:
+    dockerStrategy:
+      buildArgs:
+        - name: KMODVER
+          value: DEMO
+  output:
+    to:
+      kind: ImageStreamTag
+      name: DRIVER_NAME-driver-container:demo
