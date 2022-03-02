@@ -5,25 +5,25 @@ metadata:
     openshift.io/description: ""
     openshift.io/display-name: ""
   labels:
-    kubernetes.io/metadata.name: simple-kmod
-  name: simple-kmod
+    kubernetes.io/metadata.name: silly
+  name: silly
 ---
 apiVersion: image.openshift.io/v1
 kind: ImageStream
 metadata:
   labels:
-    app: simple-kmod-driver-container
-  name: simple-kmod-driver-container
-  namespace: simple-kmod
+    app: silly-driver-container
+  name: silly-driver-container
+  namespace: silly
 spec: {}
 ---
 apiVersion: build.openshift.io/v1
 kind: BuildConfig
 metadata:
   labels:
-    app: simple-kmod-driver-build
-  name: simple-kmod-driver-build
-  namespace: simple-kmod
+    app: silly-driver-build
+  name: silly-driver-build
+  namespace: silly
 spec:
   nodeSelector:
     node-role.kubernetes.io/worker: ""
@@ -45,15 +45,15 @@ spec:
 
       # Grab the software from upstream
       #RUN git clone https://github.com/enriquebelarte/simple-kmod.git 
-      RUN git clone https://github.com/kmods-via-containers/simple-kmod
-      WORKDIR simple-kmod
+      RUN git clone https://github.com/enriquebelarte/silly-kmod.git
+      WORKDIR silly-kmod
 
       # Prep and build the module
       RUN make buildprep KVER=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core) KMODVER=${KMODVER} \
       && make all       KVER=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core) KMODVER=${KMODVER} \
       && make install   KVER=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core) KMODVER=${KMODVER}
 
-      RUN echo "simple-kmod" > /etc/modules-load.d/simple-kmod.conf
+      RUN echo "silly" > /etc/modules-load.d/silly.conf
   strategy:
     dockerStrategy:
       buildArgs:
@@ -62,4 +62,4 @@ spec:
   output:
     to:
       kind: ImageStreamTag
-      name: simple-kmod-driver-container:demo
+      name: silly-driver-container:demo

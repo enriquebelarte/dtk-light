@@ -3,10 +3,28 @@
 OCP_VERSION=$(oc get clusterversion/version -ojsonpath={.status.desired.version})
 #DRIVER_TOOLKIT_IMAGE=$(oc adm release info $OCP_VERSION --image-for=driver-toolkit)
 DRIVER_TOOLKIT_IMAGE="quay.io/ebelarte/dtk-light:0.3"
-DRIVER_SOURCE_REPO="https://github.com/kmods-via-containers/simple-kmod"
-DRIVER_SOURCE_DIR=simple-kmod
-DRIVER_NAME=simple-kmod
+#DRIVER_SOURCE_REPO="https://github.com/kmods-via-containers/simple-kmod"
+DRIVER_SOURCE_REPO="https://github.com/enriquebelarte/silly-kmod.git"
+DRIVER_SOURCE_DIR=silly-kmod
+DRIVER_NAME=silly
+
 
 # Substitute strings in templates
+create_templates() {
 sed -e "s#DRIVER_NAME#$DRIVER_NAME#g; s#DRIVER_TOOLKIT_IMAGE#$DRIVER_TOOLKIT_IMAGE#g; s#DRIVER_SOURCE_REPO#$DRIVER_SOURCE_REPO#g; s#DRIVER_SOURCE_DIR#$DRIVER_SOURCE_DIR#g" oc-templates/0001-buildconfig.yaml.template > oc-deploys/0001-buildconfig.yaml
 sed -e "s#DRIVER_NAME#$DRIVER_NAME#g" oc-templates/0002-drivercontainer.yaml.template > oc-deploys/0002-drivercontainer.yaml
+}
+
+install_buildconfig() {
+oc create -f oc-deploys/0001-buildconfig.yaml
+}
+
+install_drivercontainer() {
+oc create -f oc-deploys/0002-drivercontainer.yaml
+}
+
+destroy() {
+oc delete -f oc-deploys/
+}
+
+"$@"

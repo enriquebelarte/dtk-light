@@ -7,5 +7,14 @@ verify:
 test-e2e:
 	./test/e2e
 
-create_templates:
-	./dtkctl
+templates:
+	./dtkctl make_templates
+
+drivercontainer:
+	./dtkctl install_drivercontainer
+ 
+buildconfig:
+	./dtkctl install_buildconfig
+
+destroy:
+	./dtkctl destroy

@@ -46,7 +46,7 @@ spec:
       # Grab the software from upstream
       #RUN git clone https://github.com/enriquebelarte/simple-kmod.git 
       RUN git clone DRIVER_SOURCE_REPO
-      WORKDIR DRIVER_NAME
+      WORKDIR DRIVER_SOURCE_DIR
 
       # Prep and build the module
       RUN make buildprep KVER=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core) KMODVER=${KMODVER} \
