@@ -1,3 +1,10 @@
+## dtk-light
+Try to abstract KVC (kmods-via-containers) from original Driver Toolkit.
+
+
+
+Based on original:
+
 # Driver Toolkit
 The Driver Toolkit is a container image in the OpenShift payload which is meant to be used as a base image on which to build driver containers. The Driver Toolkit image [contains](https://github.com/openshift/driver-toolkit/blob/master/Dockerfile "contains") the kernel packages commonly required as dependencies to build or install kernel modules as well as a few tools needed in driver containers. The version of these packages will match the kernel version running on the RHCOS nodes in the corresponding OpenShift release. 
 
