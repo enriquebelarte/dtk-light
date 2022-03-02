@@ -29,7 +29,7 @@ subjects:
 - kind: ServiceAccount
   name: DRIVER_NAME-driver-container
 userNames:
-- system:serviceaccount:DRIVER_NAME-demo:DRIVER_NAME-driver-container
+- system:serviceaccount:DRIVER_NAME:DRIVER_NAME-driver-container
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -47,14 +47,14 @@ spec:
       serviceAccount: DRIVER_NAME-driver-container
       serviceAccountName: DRIVER_NAME-driver-container
       containers:
-      - image: image-registry.openshift-image-registry.svc:5000/DRIVER_NAME-demo/DRIVER_NAME-driver-container:demo
+      - image: image-registry.openshift-image-registry.svc:5000/DRIVER_NAME/DRIVER_NAME-driver-container:demo
         name: DRIVER_NAME-driver-container
         imagePullPolicy: Always
         command: ["/sbin/init"]
         lifecycle:
           preStop:
             exec:
-              command: ["/bin/sh", "-c", "rmmod DRIVER_NAME"]
+              command: ["/bin/sh", "-c", "modprobe -r DRIVER_NAME"]
 
         securityContext:
           privileged: true

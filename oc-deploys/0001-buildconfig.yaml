@@ -33,7 +33,7 @@ spec:
     - type: "ImageChange"
   source:
     dockerfile: |
-      FROM quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:89f2c3b7c078a97682d4a375d04d6e45c73099679679dd2e2487ba3632be83d7
+      FROM quay.io/ebelarte/dtk-light:0.3
       WORKDIR /build/
 
       RUN yum -y install git make sudo gcc \
@@ -45,15 +45,15 @@ spec:
 
       # Grab the software from upstream
       #RUN git clone https://github.com/enriquebelarte/simple-kmod.git 
-      RUN git clone https://github.com/enriquebelarte/simple-kmod.git
+      RUN git clone https://github.com/kmods-via-containers/simple-kmod
       WORKDIR simple-kmod
 
       # Prep and build the module
       RUN make buildprep KVER=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core) KMODVER=${KMODVER} \
       && make all       KVER=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core) KMODVER=${KMODVER} \
       && make install   KVER=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core) KMODVER=${KMODVER}
-      RUN echo "simple-kmod" > /etc/modules-load.d/simple-kmod.conf
 
+      RUN echo "simple-kmod" > /etc/modules-load.d/simple-kmod.conf
   strategy:
     dockerStrategy:
       buildArgs:

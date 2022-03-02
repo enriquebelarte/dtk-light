@@ -29,7 +29,7 @@ subjects:
 - kind: ServiceAccount
   name: simple-kmod-driver-container
 userNames:
-- system:serviceaccount:simple-kmod-demo:simple-kmod-driver-container
+- system:serviceaccount:simple-kmod:simple-kmod-driver-container
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -47,14 +47,14 @@ spec:
       serviceAccount: simple-kmod-driver-container
       serviceAccountName: simple-kmod-driver-container
       containers:
-      - image: image-registry.openshift-image-registry.svc:5000/simple-kmod-demo/simple-kmod-driver-container:demo
+      - image: image-registry.openshift-image-registry.svc:5000/simple-kmod/simple-kmod-driver-container:demo
         name: simple-kmod-driver-container
         imagePullPolicy: Always
         command: ["/sbin/init"]
         lifecycle:
           preStop:
             exec:
-              command: ["/bin/sh", "-c", "rmmod simple-kmod"]
+              command: ["/bin/sh", "-c", "modprobe -r simple-kmod"]
 
         securityContext:
           privileged: true
