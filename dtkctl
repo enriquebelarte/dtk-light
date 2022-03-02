@@ -1,5 +1,5 @@
 #!/bin/bash
-# Config variables
+# Custom config variables
 OCP_VERSION=$(oc get clusterversion/version -ojsonpath={.status.desired.version})
 #DRIVER_TOOLKIT_IMAGE=$(oc adm release info $OCP_VERSION --image-for=driver-toolkit)
 DRIVER_TOOLKIT_IMAGE="quay.io/ebelarte/dtk-light:0.3"
@@ -15,14 +15,17 @@ sed -e "s#DRIVER_NAME#$DRIVER_NAME#g; s#DRIVER_TOOLKIT_IMAGE#$DRIVER_TOOLKIT_IMA
 sed -e "s#DRIVER_NAME#$DRIVER_NAME#g" oc-templates/0002-drivercontainer.yaml.template > oc-deploys/0002-drivercontainer.yaml
 }
 
+# Create buildconfig
 install_buildconfig() {
 oc create -f oc-deploys/0001-buildconfig.yaml
 }
 
+# Create drivercontainer. Should not be applied until buildconfig is completely done.
 install_drivercontainer() {
 oc create -f oc-deploys/0002-drivercontainer.yaml
 }
 
+# Delete last buildconfig and drivercontainer
 destroy() {
 oc delete -f oc-deploys/
 }
