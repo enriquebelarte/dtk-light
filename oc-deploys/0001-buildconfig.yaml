@@ -44,7 +44,7 @@ spec:
       ARG KMODVER
 
       # Grab the software from upstream
-      #RUN git clone https://github.com/enriquebelarte/simple-kmod.git 
+      #RUN git clone https://github.com/enriquebelarte/silly-kmod.git 
       RUN git clone https://github.com/enriquebelarte/silly-kmod.git
       WORKDIR silly-kmod
 
@@ -52,7 +52,7 @@ spec:
       RUN make buildprep KVER=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core) KMODVER=${KMODVER} \
       && make all       KVER=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core) KMODVER=${KMODVER} \
       && make install   KVER=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core) KMODVER=${KMODVER}
-
+      # Add the built module
       RUN echo "silly" > /etc/modules-load.d/silly.conf
   strategy:
     dockerStrategy:
