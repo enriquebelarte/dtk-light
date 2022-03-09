@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: silly-driver-container
+  name: ice-driver-container
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: silly-driver-container
+  name: ice-driver-container
 rules:
 - apiGroups:
   - security.openshift.io
@@ -20,41 +20,41 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: silly-driver-container
+  name: ice-driver-container
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: silly-driver-container
+  name: ice-driver-container
 subjects:
 - kind: ServiceAccount
-  name: silly-driver-container
+  name: ice-driver-container
 userNames:
-- system:serviceaccount:silly:silly-driver-container
+- system:serviceaccount:ice:ice-driver-container
 ---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: silly-driver-container
+  name: ice-driver-container
 spec:
   selector:
     matchLabels:
-      app: silly-driver-container
+      app: ice-driver-container
   template:
     metadata:
       labels:
-        app: silly-driver-container
+        app: ice-driver-container
     spec:
-      serviceAccount: silly-driver-container
-      serviceAccountName: silly-driver-container
+      serviceAccount: ice-driver-container
+      serviceAccountName: ice-driver-container
       containers:
-      - image: image-registry.openshift-image-registry.svc:5000/silly/silly-driver-container:demo
-        name: silly-driver-container
+      - image: image-registry.openshift-image-registry.svc:5000/ice/ice-driver-container:demo
+        name: ice-driver-container
         imagePullPolicy: Always
         command: ["/sbin/init"]
         lifecycle:
           preStop:
             exec:
-              command: ["/bin/sh", "-c", "modprobe -r silly"]
+              command: ["/bin/sh", "-c", "modprobe -r ice"]
 
         securityContext:
           privileged: true

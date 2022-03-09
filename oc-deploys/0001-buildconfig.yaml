@@ -5,25 +5,25 @@ metadata:
     openshift.io/description: ""
     openshift.io/display-name: ""
   labels:
-    kubernetes.io/metadata.name: silly
-  name: silly
+    kubernetes.io/metadata.name: ice
+  name: ice
 ---
 apiVersion: image.openshift.io/v1
 kind: ImageStream
 metadata:
   labels:
-    app: silly-driver-container
-  name: silly-driver-container
-  namespace: silly
+    app: ice-driver-container
+  name: ice-driver-container
+  namespace: ice
 spec: {}
 ---
 apiVersion: build.openshift.io/v1
 kind: BuildConfig
 metadata:
   labels:
-    app: silly-driver-build
-  name: silly-driver-build
-  namespace: silly
+    app: ice-driver-build
+  name: ice-driver-build
+  namespace: ice
 spec:
   nodeSelector:
     node-role.kubernetes.io/worker: ""
@@ -45,15 +45,17 @@ spec:
 
       # Grab the software from upstream
       #RUN git clone https://github.com/enriquebelarte/silly-kmod.git 
-      RUN git clone https://github.com/enriquebelarte/silly-kmod.git
-      WORKDIR silly-kmod
-
+      #RUN git clone DRIVER_SOURCE_REPO
+      RUN curl -L https://sourceforge.net/projects/e1000/files/ice%20stable/1.7.16/ice-1.7.16.tar.gz/download | tar xvz
+      WORKDIR ice-1.7.16/src
+     
       # Prep and build the module
-      RUN make buildprep KVER=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core) KMODVER=${KMODVER} \
-      && make all       KVER=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core) KMODVER=${KMODVER} \
-      && make install   KVER=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core) KMODVER=${KMODVER}
+      #RUN make buildprep KVER=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core) KMODVER=${KMODVER} \
+      #&& make all       KVER=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core) KMODVER=${KMODVER} \
+      #&& make install   KVER=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core) KMODVER=${KMODVER}
+      RUN make install  KVER=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core) KMODVER=${KMODVER}
       # Add the built module
-      RUN echo "silly" > /etc/modules-load.d/silly.conf
+      RUN echo "ice" > /etc/modules-load.d/ice.conf
   strategy:
     dockerStrategy:
       buildArgs:
@@ -62,4 +64,4 @@ spec:
   output:
     to:
       kind: ImageStreamTag
-      name: silly-driver-container:demo
+      name: ice-driver-container:demo

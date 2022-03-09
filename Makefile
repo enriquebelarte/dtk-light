@@ -18,3 +18,6 @@ buildconfig:
 
 destroy:
 	./dtkctl destroy
+
+nvidia:
+	/dtkctl nvidia

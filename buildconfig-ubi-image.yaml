@@ -1,0 +1,105 @@
+apiVersion: project.openshift.io/v1
+kind: Project
+metadata:
+  annotations:
+    openshift.io/description: ""
+    openshift.io/display-name: ""
+  labels:
+    kubernetes.io/metadata.name: dtk-light-ubi
+  name: dtk-light
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  labels:
+    app: dtk-light-ubi
+  name: dtk-light-ubi
+  namespace: silly
+spec: {}
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  labels:
+    app: dtk-light-ubi
+  name: dtk-light-ubi
+  namespace: silly
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/worker: ""
+  runPolicy: "Serial"
+  triggers:
+    - type: "ConfigChange"
+    - type: "ImageChange"
+  source:
+    dockerfile: |
+      FROM registry.access.redhat.com/ubi8/ubi-minimal:8.5-230.1645809059
+      ARG KERNEL_VERSION=''
+      ARG RT_KERNEL_VERSION=''
+      ARG RHEL_VERSION=''
+      RUN microdnf update --best --setopt=install_weak_deps=0 --releasever=${RHEL_VERSION}
+      # kernel packages needed to build drivers / kmods 
+      RUN microdnf -y install --enablerepo=rhel-8-for-x86_64-baseos-rpms \
+          kernel-core${KERNEL_VERSION:+-}${KERNEL_VERSION} \
+          kernel-devel${KERNEL_VERSION:+-}${KERNEL_VERSION} \
+          kernel-headers${KERNEL_VERSION:+-}${KERNEL_VERSION} \
+          kernel-modules${KERNEL_VERSION:+-}${KERNEL_VERSION} \
+          kernel-modules-extra${KERNEL_VERSION:+-}${KERNEL_VERSION} \
+          && microdnf clean all
+      
+      # real-time kernel packages
+      RUN if [ $(arch) = x86_64 ]; then \
+          microdnf -y install --enablerepo=rhel-8-for-x86_64-baseos-rpms \
+          kernel-rt-core${RT_KERNEL_VERSION:+-}${RT_KERNEL_VERSION} \
+          kernel-rt-devel${RT_KERNEL_VERSION:+-}${RT_KERNEL_VERSION} \
+          kernel-rt-modules${RT_KERNEL_VERSION:+-}${RT_KERNEL_VERSION} \
+          kernel-rt-modules-extra${RT_KERNEL_VERSION:+-}${RT_KERNEL_VERSION} \
+          && microdnf clean all ; fi
+      
+      # Additional packages that are mandatory for driver-containers
+      RUN microdnf -y install --enablerepo=rhel-8-for-x86_64-baseos-rpms elfutils-libelf-devel kmod binutils kabi-dw kernel-abi-whitelists \
+          && microdnf clean all
+          
+      # Find and install the GCC version used to compile the kernel
+      # If it cannot be found (fails on some architecutres), install the default gcc
+      RUN export INSTALLED_KERNEL=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core) \
+      && GCC_VERSION=$(cat /lib/modules/${INSTALLED_KERNEL}/config | grep -Eo "Compiler: gcc \(GCC\) ([0-9\.]+)" | grep -Eo "([0-9\.]+)") \
+      && microdnf -y install --enablerepo=rhel-8-for-x86_64-baseos-rpms gcc-${GCC_VERSION} \
+      || microdnf -y install --enablerepo=rhel-8-for-x86_64-baseos-rpms gcc && \
+      microdnf clean all
+      
+      # Additional packages that are needed for a subset (e.g DPDK) of driver-containers
+      RUN microdnf -y install --enablerepo=rhel-8-for-x86_64-baseos-rpms xz diffutils \
+          && microdnf clean all
+          
+      # Packages needed to build kmods-via-containers and likely needed for driver-containers
+      RUN microdnf -y install --enablerepo=rhel-8-for-x86_64-baseos-rpms git make sudo gcc \
+          && microdnf clean all
+      
+      # Packages needed to sign and run externally build kernel modules
+      RUN if [ $(arch) == "x86_64" ] || [ $(arch) == "aarch64" ]; then \
+          ARCH_DEP_PKGS="mokutil"; fi \
+          && microdnf -y install --enablerepo=rhel-8-for-x86_64-baseos-rpms openssl keyutils $ARCH_DEP_PKGS \
+          && microdnf clean all
+      
+      
+      COPY manifests /manifests
+      
+      LABEL io.k8s.description="driver-toolkit is a container with the kernel packages necessary for building driver containers for deploying kernel modules/drivers on OpenShift" \
+            name="driver-toolkit" \
+            io.openshift.release.operator=true \
+            version="0.1"
+      
+      # Last layer for metadata for mapping the driver-toolkit to a specific kernel version
+      RUN export INSTALLED_KERNEL=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-core); \
+          export INSTALLED_RT_KERNEL=$(rpm -q --qf "%{VERSION}-%{RELEASE}.%{ARCH}"  kernel-rt-core); \
+          echo "{ \"KERNEL_VERSION\": \"${INSTALLED_KERNEL}\", \"RT_KERNEL_VERSION\": \"${INSTALLED_RT_KERNEL}\", \"RHEL_VERSION\": \"${RHEL_VERSION}\" }" > /etc/driver-toolkit-release.json
+  strategy:
+    dockerStrategy:
+      buildArgs:
+        - name: KMODVER
+          value: DEMO
+  output:
+    to:
+      kind: ImageStreamTag
+      name: dtk-light:demo
