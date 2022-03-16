@@ -1,6 +1,6 @@
 ## dtk-light
-Try to abstract KVC (kmods-via-containers) from original Driver Toolkit.
-
+-Attempt to remove KVC (kmods-via-containers) from original Driver Toolkit.
+-Check if SRO works with resulting DTK(light) image.
 
 
 Based on original:
